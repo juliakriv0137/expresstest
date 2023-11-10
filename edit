@@ -48,7 +48,7 @@ class NameApi {
 
     public function api_send($url) {
        
-        return ''; // Заглушка для ответа API.
+        return ''; 
     }
 
     public function self_get_option($option_name) {
