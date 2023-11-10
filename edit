@@ -8,48 +8,51 @@ class NameApi {
             return false;
         }
 
-        $ret = array();
+        $ret = [];
         $page = 0;
         $found = false;
 
-        while (true) {
-            $params = "status=all&id_user=" . $this->self_get_option('superjob_user_id') . "&with_new_response=0&order_field=date&order_direction=desc&page={$page}&count=100";
-            $res = $this->api_send($this->api_url . '/hr/vacancies/?' . $params);
+        while ($this->fetchVacancies($page, $vid, $ret, $found)) {
+            $page++;
+        }
 
-            if ($res === false) {
-                return false; 
-            }
+        return is_object($found) ? $found : $ret;
+    }
 
-            $res_o = json_decode($res);
+    private function fetchVacancies(&$page, $vid, &$ret, &$found) {
+        $params = "status=all&id_user={$this->self_get_option('superjob_user_id')}&with_new_response=0&order_field=date&order_direction=desc&page={$page}&count=100";
+        $res = $this->api_send("{$this->api_url}/hr/vacancies/?{$params}");
+        $res_o = json_decode($res);
 
-            if (!is_object($res_o) || !isset($res_o->objects)) {
-                return false; 
-            }
-
+        if ($res !== false && is_object($res_o) && isset($res_o->objects)) {
             $ret = array_merge($res_o->objects, $ret);
 
-            if ($vid > 0) {
-                foreach ($res_o->objects as $key => $value) {
-                    if ($value->id == $vid) {
-                        $found = $value;
-                        break;
-                    }
-                }
+            if ($vid > 0 && !empty($res_o->objects)) {
+                $found = $this->findVacancy($res_o->objects, $vid);
             }
 
-            if ($found === false && $res_o->more) {
-                $page++;
-            } else {
-                return is_object($found) ? $found : $ret;
+            return $found === false && $res_o->more;
+        }
+
+        return false;
+    }
+
+    private function findVacancy($objects, $vid) {
+        foreach ($objects as $value) {
+            if ($value->id == $vid) {
+                return $value;
             }
         }
+        return false;
     }
 
     public function api_send($url) {
-
+       
+        return ''; // Заглушка для ответа API.
     }
 
     public function self_get_option($option_name) {
-        
+       
+        return ''; 
     }
 }
